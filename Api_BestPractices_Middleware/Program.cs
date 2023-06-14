@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.Diagnostics;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,17 +16,36 @@ app.UseAuthorization();
 
 app.Use(async(context, next) =>
 {
-    Console.WriteLine("before- next delegate- use method");
+    Console.WriteLine("app.use mehtod, before- next delegate");
     await next.Invoke();
-    Console.WriteLine("after- next delegate- use method");
+    Console.WriteLine("app.use mehtod,after- next delegate");
+});
+
+app.Map("/branchingviamap", builder =>
+{
+    builder.Use(async (context, next) =>
+    {
+        Console.WriteLine("builder.use method, before next delegate, branching via map");
+        await next.Invoke();
+        Console.WriteLine("builder.use method, after next delegate, branching via map");
+
+    });
+
+    builder.Run(async context =>
+    {
+        Console.WriteLine("builder.run, response to client, branch via map");
+        await context.Response.WriteAsync("now in a new branched middleware");
+    }
+    );
+    
 });
 
 //terminal middleware, accepts only httpcontext parameter
 app.Run(async context =>
 {
-    Console.WriteLine($"response to the client- run method");
+    Console.WriteLine($"app.run, response to the client");
     context.Response.StatusCode = 200;
-    await context.Response.WriteAsync("this is middleware component !");
+    await context.Response.WriteAsync("this is a sample utforing av middleware component !");
 }
 );
 
